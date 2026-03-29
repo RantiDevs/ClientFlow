@@ -11,6 +11,7 @@ import { auth, ApiError } from "../../lib/api";
 interface LoginProps {
   onEmailLogin: (email: string, password: string) => Promise<void>;
   onRegisterSuccess: (data: { token: string; user: { id: number; name: string; email: string; role: string; avatar?: string; phone?: string } }) => void;
+  onBackToHome?: () => void;
 }
 
 type Portal = {
@@ -81,7 +82,7 @@ type Mode =
   | "reset-code"
   | "new-password";
 
-export function Login({ onEmailLogin, onRegisterSuccess }: LoginProps) {
+export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginProps) {
   const [mode, setMode] = useState<Mode>("portal-select");
   const [selectedPortal, setSelectedPortal] = useState<Portal | null>(null);
 
@@ -441,6 +442,15 @@ export function Login({ onEmailLogin, onRegisterSuccess }: LoginProps) {
             {mode === "portal-select" && (
               <>
                 <div className="text-center md:text-left">
+                  {onBackToHome && (
+                    <button
+                      onClick={onBackToHome}
+                      className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-6 mx-auto md:mx-0"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back to Landing Page
+                    </button>
+                  )}
                   <h2 className="text-2xl font-bold text-slate-900">Welcome to ClientFlow</h2>
                   <p className="text-slate-500 mt-1">Choose your portal to sign in or create an account</p>
                 </div>

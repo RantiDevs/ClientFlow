@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "./components/layout/AppLayout";
+import { LandingPage } from "./components/landing/LandingPage";
 import { Login } from "./components/auth/Login";
 import { InvestorDashboard } from "./components/investor/InvestorDashboard";
 import { Portfolio } from "./components/investor/Portfolio";
@@ -32,6 +33,7 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isNewTenant, setIsNewTenant] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLanding, setShowLanding] = useState(true);
 
   const [investorBalance, setInvestorBalance] = useState(689372);
   const [investorActivities, setInvestorActivities] = useState([
@@ -108,7 +110,10 @@ function App() {
   }
 
   if (!userRole) {
-    return <Login onEmailLogin={handleEmailLogin} onRegisterSuccess={handleRegisterSuccess} />;
+    if (showLanding) {
+      return <LandingPage onLoginClick={() => setShowLanding(false)} />;
+    }
+    return <Login onEmailLogin={handleEmailLogin} onRegisterSuccess={handleRegisterSuccess} onBackToHome={() => setShowLanding(true)} />;
   }
 
   if (userRole === "tenant" && isNewTenant) {
