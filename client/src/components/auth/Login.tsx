@@ -8,6 +8,21 @@ import {
 } from "lucide-react";
 import { auth, ApiError } from "../../lib/api";
 
+const slides = [
+  {
+    heading: "Manage your real estate portfolio with confidence.",
+    body: "ClientFlow provides full transparency and seamless communication for modern property management.",
+  },
+  {
+    heading: "Track ROI and investment performance in real time.",
+    body: "Live analytics and interactive dashboards keep you on top of every asset, income stream, and expense.",
+  },
+  {
+    heading: "Sustainable farm investments with Verda Farms.",
+    body: "Monitor crop yields, harvest timelines, and agricultural ROI all from one unified platform.",
+  },
+];
+
 interface LoginProps {
   onEmailLogin: (email: string, password: string) => Promise<void>;
   onRegisterSuccess: (data: { token: string; user: { id: number; name: string; email: string; role: string; avatar?: string; phone?: string } }) => void;
@@ -86,6 +101,23 @@ export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginPr
   const [mode, setMode] = useState<Mode>("portal-select");
   const [selectedPortal, setSelectedPortal] = useState<Portal | null>(null);
 
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [slideFading, setSlideFading] = useState(false);
+  const slideTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    slideTimerRef.current = setInterval(() => {
+      setSlideFading(true);
+      setTimeout(() => {
+        setSlideIndex((i) => (i + 1) % slides.length);
+        setSlideFading(false);
+      }, 400);
+    }, 4000);
+    return () => {
+      if (slideTimerRef.current) clearInterval(slideTimerRef.current);
+    };
+  }, []);
+
   // Sign-in
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -99,7 +131,7 @@ export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginPr
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regShowPassword, setRegShowPassword] = useState(false);
-  const [regRole, setRegRole] = useState<"investor" | "tenant">("tenant");
+  const [regRole, setRegRole] = useState<"investor" | "tenant" | "admin" | "verdafarms">("tenant");
 
   // Email verification (after registration)
   const [verifyEmail, setVerifyEmailState] = useState("");
@@ -412,7 +444,7 @@ export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginPr
     <div className="flex items-center justify-center min-h-screen bg-[#F8F9FB] p-4">
       <div className="w-full max-w-5xl grid md:grid-cols-2 bg-white rounded-[32px] shadow-2xl overflow-hidden min-h-[600px]">
 
-        {/* Left Side - Visual */}
+        {/* Left Side - Slideshow */}
         <div className="hidden md:flex bg-slate-900 p-12 flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-[#DDA04E] rounded-full blur-3xl opacity-20" />
           <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-500 rounded-full blur-3xl opacity-10" />
@@ -420,17 +452,43 @@ export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginPr
             <div className="h-12 w-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8">
               <span className="text-[#DDA04E] font-bold text-base">CF</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-              Manage your real estate portfolio with confidence.
-            </h1>
-            <p className="text-slate-400 text-lg">
-              ClientFlow provides full transparency and seamless communication for modern property management.
-            </p>
+            <div
+              style={{
+                transition: "opacity 0.4s ease, transform 0.4s ease",
+                opacity: slideFading ? 0 : 1,
+                transform: slideFading ? "translateY(10px)" : "translateY(0)",
+              }}
+            >
+              <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
+                {slides[slideIndex].heading}
+              </h1>
+              <p className="text-slate-400 text-lg">
+                {slides[slideIndex].body}
+              </p>
+            </div>
           </div>
-          <div className="relative z-10 flex space-x-2 mt-12">
-            <div className="h-2 w-8 bg-[#DDA04E] rounded-full" />
-            <div className="h-2 w-2 bg-slate-700 rounded-full" />
-            <div className="h-2 w-2 bg-slate-700 rounded-full" />
+          <div className="relative z-10 flex items-center space-x-2 mt-12">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setSlideFading(true);
+                  setTimeout(() => { setSlideIndex(i); setSlideFading(false); }, 400);
+                  if (slideTimerRef.current) clearInterval(slideTimerRef.current);
+                  slideTimerRef.current = setInterval(() => {
+                    setSlideFading(true);
+                    setTimeout(() => { setSlideIndex((cur) => (cur + 1) % slides.length); setSlideFading(false); }, 400);
+                  }, 4000);
+                }}
+                className="focus:outline-none"
+                aria-label={`Go to slide ${i + 1}`}
+              >
+                <div
+                  style={{ transition: "all 0.3s ease" }}
+                  className={i === slideIndex ? "h-2 w-8 bg-[#DDA04E] rounded-full" : "h-2 w-2 bg-slate-700 hover:bg-slate-500 rounded-full"}
+                />
+              </button>
+            ))}
           </div>
         </div>
 
@@ -586,24 +644,22 @@ export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginPr
                   </Button>
                 </form>
 
-                {(selectedPortal.key === "investor" || selectedPortal.key === "tenant") && (
-                  <p className="text-center text-sm text-slate-500">
-                    Don't have an account?{" "}
-                    <button
-                      className="font-semibold text-slate-900 hover:underline"
-                      onClick={() => {
-                        setRegRole(selectedPortal.key as "investor" | "tenant");
-                        setRegName("");
-                        setRegEmail("");
-                        setRegPassword("");
-                        setError(null);
-                        setMode("create-account");
-                      }}
-                    >
-                      Create one
-                    </button>
-                  </p>
-                )}
+                <p className="text-center text-sm text-slate-500">
+                  Don't have an account?{" "}
+                  <button
+                    className="font-semibold text-slate-900 hover:underline"
+                    onClick={() => {
+                      setRegRole(selectedPortal.key as "investor" | "tenant" | "admin" | "verdafarms");
+                      setRegName("");
+                      setRegEmail("");
+                      setRegPassword("");
+                      setError(null);
+                      setMode("create-account");
+                    }}
+                  >
+                    Create one
+                  </button>
+                </p>
               </>
             )}
 
@@ -629,11 +685,13 @@ export function Login({ onEmailLogin, onRegisterSuccess, onBackToHome }: LoginPr
                       {[
                         { value: "investor", label: "Investor", icon: <Building2 className="h-4 w-4" /> },
                         { value: "tenant", label: "Tenant", icon: <User className="h-4 w-4" /> },
+                        { value: "admin", label: "Admin", icon: <Shield className="h-4 w-4" /> },
+                        { value: "verdafarms", label: "Verda Farms", icon: <Leaf className="h-4 w-4" /> },
                       ].map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => setRegRole(opt.value as "investor" | "tenant")}
+                          onClick={() => setRegRole(opt.value as "investor" | "tenant" | "admin" | "verdafarms")}
                           className={`flex items-center gap-2 justify-center py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
                             regRole === opt.value
                               ? "border-slate-900 bg-slate-900 text-white"
