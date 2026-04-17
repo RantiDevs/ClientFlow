@@ -205,7 +205,7 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Password must be at least 8 characters long." });
     }
 
-    const allowedRoles = ["investor", "tenant"];
+    const allowedRoles = ["investor", "tenant", "admin", "verdafarms"];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: "Invalid account type selected." });
     }
